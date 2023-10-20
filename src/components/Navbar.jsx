@@ -5,13 +5,15 @@ import { Link } from "react-router-dom";
 
 const menu = "./img/Menu_icon_icon-icons.com_71858.png"
 function Navbar( {active,orange,dark}) {
+    const backgroud = dark ? " bg-black " : ""
+    const gradiantColor =orange ? " gradiantorange " : ""
     const [menuactive , setmenuactive ] = useState(false);
         const toggle =()=>{
         setmenuactive((old)=>!old)
         }
         return (   
-<div className={orange&&'gradiantorange'} >
-<nav class="border-gray-200 text-xl  container m-auto font-bold ">
+<div className={gradiantColor+  backgroud} >
+<nav class="border-gray-200 text-xl   container m-auto font-bold " >
     <div class="container mx-auto flex flex-wrap items-center justify-between">
         <Link to="/" class="flex items-center my-1">
        {  dark ? <img src={logodark} className=" w-20 h-15 " alt="no image sorry" /> : <img src={logo} className=" w-20 h-15 " alt="no image sorry" />  }
@@ -24,37 +26,12 @@ function Navbar( {active,orange,dark}) {
         </button>
         <div class="hidden md:block w-full md:w-auto" id="mobile-menu">
         <ul class="flex-col md:flex-row flex md:space-x-8 mt-4 md:mt-0 md:text-sm md:font-medium">
+            
             <li>
-            <a href="#" class="bg-blue-700 md:bg-transparent text-white block pl-3 pr-4 py-2 md:text-blue-700 md:p-0 rounded focus:outline-none" aria-current="page">Home</a>
+            <a href="/About" class="text-gray-100 hover:bg-gray-50 border-b border-gray-100 md:hover:bg-transparent md:border-0 block pl-3 pr-4 py-2 md:hover:text-blue-700 md:p-0">About</a>
             </li>
             <li>
-                <button id="dropdownNavbarLink" data-dropdown-toggle="dropdownNavbar" class="text-gray-100 hover:bg-gray-50 border-b border-gray-100 md:hover:bg-transparent md:border-0 pl-3 pr-4 py-2 md:hover:text-blue-700 md:p-0 font-medium flex items-center justify-between w-full md:w-auto">Dropdown <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
-               
-                <div id="dropdownNavbar" class="hidden bg-white text-base z-10 list-none divide-y divide-gray-100 rounded shadow my-4 w-44">
-                    <ul class="py-1" aria-labelledby="dropdownLargeButton">
-                    <li>
-                        <a href="#" class="text-sm hover:bg-gray-100 text-gray-100 block px-4 py-2">Dashboard</a>
-                    </li>
-                    <li>
-                        <a href="#" class="text-sm hover:bg-gray-100 text-gray-100 block px-4 py-2">Settings</a>
-                    </li>
-                    <li>
-                        <a href="#" class="text-sm hover:bg-gray-100 text-gray-100 block px-4 py-2">Earnings</a>
-                    </li>
-                    </ul>
-                    <div class="py-1">
-                    <a href="#" class="text-sm hover:bg-gray-100 text-gray-100 block px-4 py-2">Sign out</a>
-                    </div>
-                </div>
-            </li>
-            <li>
-            <a href="#" class="text-gray-100 hover:bg-gray-50 border-b border-gray-100 md:hover:bg-transparent md:border-0 block pl-3 pr-4 py-2 md:hover:text-blue-700 md:p-0">Services</a>
-            </li>
-            <li>
-            <a href="#" class="text-gray-100 hover:bg-gray-50 border-b border-gray-100 md:hover:bg-transparent md:border-0 block pl-3 pr-4 py-2 md:hover:text-blue-700 md:p-0">Pricing</a>
-            </li>
-            <li>
-            <a href="#" class="text-gray-100 hover:bg-gray-50 border-b border-gray-100 md:hover:bg-transparent md:border-0 block pl-3 pr-4 py-2 md:hover:text-blue-700 md:p-0">Contact</a>
+            <a href="/Contact" class="text-gray-100 hover:bg-gray-50 border-b border-gray-100 md:hover:bg-transparent md:border-0 block pl-3 pr-4 py-2 md:hover:text-blue-700 md:p-0">Contact</a>
             </li>
         </ul>
         </div>

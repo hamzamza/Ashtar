@@ -28,8 +28,8 @@ function Home() {
            </div>
          </div>
          <div className="flex absolute bottom-0 right-0 w-full justify-center p-20"> 
-           <Link to={"/user"}>
-           <div className="px-10 py-3 gradiantorange rounded-full flex items-center hover:scale-110"> <h1 className="text-white text-3xl font-bold text-center space-x-2 align-top inline-block" >Start</h1></div></Link>
+           <Link to={"/Application"}>
+           <div className=" px-20 py-3 gradiantorange rounded-lg  flex items-center transition-all hover:scale-x-105"> <h1 className="text-white text-3xl font-bold text-center space-x-2 align-top inline-block" >Start</h1></div></Link>
         </div>
 
         </main>
