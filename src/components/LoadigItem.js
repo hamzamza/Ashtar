@@ -1,4 +1,4 @@
-import logo from "../LANDING/LOGOBLACK.png";
+import logo from "../LANDING/alpathslogowithoutname.png";
 
 function LoadingItem() {
     return ( <div className="w-full h-screen flex items-center justify-center" >

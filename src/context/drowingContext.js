@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useRef } from "react";
-
+import { FastPathFinder } from "../algorithms/djikstra"
 // import GlobalContext from "./globalContext";
 
 const DrowingContext = createContext();
@@ -10,20 +10,52 @@ export const DrawingContextProvider = ({ children }) => {
     // vortext class : vortex{ x , y , id}
     // line class : line { vortex1 , vortex2 , id}
     // ===> states  <===
-    const width = 1080;
+    const width = 1280;
     const height = 720;
     const canvasRef = useRef(null);
-    const [selected, setSelected] = useState("vortex");
+    const [startAndEndvortex, setStartAndEndvortex] = useState([]); // [start , end ] 
+    const [shortestPath, setSchortestPath] = useState(null); // [line , line , line
+    const backgroundCanvaref = useRef(null);
+    const [mode, setMode] = useState("vortex");
     const [hoveredVortex, sethoveredVortex] = useState(null); // [x , y
     const [selectedVortex, setSelectedVortex] = useState([]);
     const [vortexes, setvortexes] = useState([]);
+    const [scrollx, setScrollx] = useState(0); // 0 - 1
+    const [scrolly, setScrolly] = useState(0); // 0 - 1
     const [edges, setedges] = useState([]);
-    const [lastAdded, setLastAdded] = useState(null);
-    const [vortexSize, setvortexSize] = useState(5);
+    const [pathConfig, setPathconfig] = useState({
+        vortexSize: 8, edgeSize: 15, border: true,
+        strokeColor: "#f8b51c", shortpathColor: "#a8b51f", scalefactor: 2,
+        hoverColor: "green", selectedColor: "blue", unselectedColor: "yellow"
+    })
+    const [isMouseDown, setIsMouseDown] = useState(false);
+    const [scale, setScale] = useState(1);
+    const [vortexSize, setvortexSize] = useState(7);
     const [undochangment, setundochangment] = useState(false);
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [imageurl, setImageurl] = useState("/map1.png");
+
+    // const scrollHorizontally=(evt)=>{
+    //     var rect = horizontalscrollRef.current.getBoundingClientRect();
+    //     const x= evt.clientX - rect.left
+    //     const   percentToMove = x/width
+    //     setScrollx(x)
+    // }
+    // const scrollhoriVertically=(evt)=>{
+    //     var rect = verticalscrollRef.current.getBoundingClientRect();
+    //     const y =  evt.clientY - rect.top
+    //     setScrolly( y)
+    // }
     // ===> functions  <===
 
+    const handleMouseDown = () => {
+        setIsMouseDown(true);
+    };
+
+    // Mouse up event handler
+    const handleMouseUp = () => {
+        setIsMouseDown(false);
+    };
 
     function getMousePos(evt) {
         var rect = canvasRef.current.getBoundingClientRect();
@@ -32,13 +64,21 @@ export const DrawingContextProvider = ({ children }) => {
             y: evt.clientY - rect.top
         };
     }
+    function findPath(v1  , v2 , vortexes , edges ) {
+        let graph = new FastPathFinder(vortexes , edges );
+        let shortestPaths = graph.findEdges(v1 , v2);
+        console.log(shortestPaths);
+        setSchortestPath(shortestPaths);
+        setStartAndEndvortex([]);
+    }
     const draw = (evt) => {
-        console.log(vortexes);
         const position = getMousePos(evt);
-        if (selected != null) {
-            if (selected === "vortex") {
+        position.x = (position.x - scrollx) / scale;
+        position.y = (position.y - scrolly) / scale;
+        if (mode != null) {
+            if (mode === "vortex") {
                 if (hoveredVortex == null)
-                    setvortexes((old) => { return [...old, { id: 12, position }] })
+                    setvortexes((old) => { return [...old, { label: null, position }] })
                 else {
                     if (selectedVortex.length == 0)
                         setSelectedVortex(old => [...old, hoveredVortex]);
@@ -48,74 +88,139 @@ export const DrawingContextProvider = ({ children }) => {
                     }
                 }
             }
+            if (mode === "path") {
+                if (hoveredVortex != null)
+                    if(startAndEndvortex.length < 2 )
+                        {
+                            console.log(`firstvortex number ${startAndEndvortex.length+1}` + hoveredVortex);
+                          console.log(hoveredVortex);
+                            setStartAndEndvortex(old => [...old, hoveredVortex]);   
+                        }
+                        else{
+                            console.log(`firstvortex number  1}` + hoveredVortex);
+                            setStartAndEndvortex([hoveredVortex]);
+                        }
+                }
+            
+
 
         }
     }
 
-    const putEdge = (position1, position2) => {
+    const putEdge = (position1, position2, color , bordercolor ) => {
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
-        context.lineWidth = 2;
+        context.lineWidth = vortexSize * 2;
         context.beginPath();
         context.moveTo(position1.x, position1.y);
         context.lineTo(position2.x, position2.y);
-        context.strokeStyle = "red";
+        context.strokeStyle = bordercolor;
         context.stroke();
+        context.closePath();
+        context.lineWidth = vortexSize * 2 - 2;
+        context.beginPath();
+        context.moveTo(position1.x, position1.y);
+        context.lineTo(position2.x, position2.y);
+        context.strokeStyle = color;
+        context.stroke();
+        context.closePath();
     };
 
     const putVortext = (position, color, size) => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         ctx.beginPath();
-        ctx.arc(position.x, position.y, size, 0, 2 * Math.PI);
-        ctx.fillStyle = color; // Set the fill color
+        ctx.arc(position.x, position.y, size + 2, 0, 2 * Math.PI);
+        ctx.fillStyle = "#f8b51c"; // Set the fill color
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(position.x, position.y, size - 1, 0, 2 * Math.PI);
+        ctx.fillStyle = "#fde293"; // Set the fill color
         ctx.fill();
         ctx.closePath();
     }
+    // ===> rendering image backgroundseparitry    <===
+    useEffect(() => {
+        const backgrouncanva = backgroundCanvaref.current;
+        const ctx = backgrouncanva.getContext('2d');
+        const image = new Image();
+        ctx.clearRect(0, 0, width, height);
+        ctx.setTransform(scale, 0, 0, scale, scrollx, scrolly);
+        image.src = imageurl;
+        image.onload = () => {
+            ctx.clearRect(0, 0, width, height);
+            ctx.drawImage(image, 0, 0, (image.width / image.height) * height, height);
+        };
+    }, [])
 
-    // ===> rendering function   <===
+    useEffect(() => {
+        const backgrouncanva = backgroundCanvaref.current;
+        const ctx = backgrouncanva.getContext('2d');
+        const image = new Image();
+        ctx.clearRect(0, 0, width, height);
+        image.src = imageurl;
+        ctx.setTransform(scale, 0, 0, scale, scrollx, scrolly);
+        ctx.drawImage(image, 0, 0, (image.width / image.height) * height, height);
+    }, [scale, scrollx, scrolly])
+
+    // ===> rendering the canvas    <===
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, width, height);
+        ctx.setTransform(scale, 0, 0, scale, scrollx, scrolly);
         edges.forEach((line) => {
-            putEdge(line.vortex1.position, line.vortex2.position);
+            putEdge(line.vortex1.position, line.vortex2.position , "#fde293", "#f8b51c");
         })
         vortexes.forEach((vortex) => {
-            putVortext(vortex.position, "red", vortexSize);
+            putVortext(vortex.position, "yellow", vortexSize);
         })
-
         // ===> hovering  managment    <===
         if (hoveredVortex != null)
             putVortext(hoveredVortex.position, "green", vortexSize + 2);
         selectedVortex.forEach((vortex) => {
             putVortext(vortex.position, "blue", vortexSize + 2);
         })
-    }, [vortexes, edges, hoveredVortex]);
+        if(shortestPath!=null)
+        shortestPath.forEach((edge) => {
+            putEdge(edge.vortex1.position, edge.vortex2.position ,"green","#f8b51c");
+        })
+       if(startAndEndvortex.length==2){
+           findPath(startAndEndvortex[0],startAndEndvortex[1] ,vortexes , edges);
+       }
 
+    }, [vortexes, startAndEndvortex , edges, hoveredVortex, scale, scrollx, scrolly]);
 
-  const undo=()=>{
-        // if remove the last vortex , if it's linked with any edge remove it too
-        const lastVortex = vortexes[vortexes.length - 1];  
+    // ==> undo the last added vortex and its related edges
+    const undo = () => {
+        //  remove the last vortex , if it's linked with any edge remove it too
+        const lastVortex = vortexes[vortexes.length - 1];
         if (lastVortex != null) {
             const newVortexes = vortexes.filter((vortex) => vortex.position.x !== lastVortex.position.x && vortex.position.y !== lastVortex.position.y);
             setvortexes(newVortexes);
-            const newEdges = edges.filter((edge) =>  edge.vortex1.position.x !== lastVortex.position.x && edge.vortex1.position.y !== lastVortex.position.y && edge.vortex2.position.x !== lastVortex.position.x && edge.vortex2.position.y !== lastVortex.position.y);
+            const newEdges = edges.filter((edge) => edge.vortex1.position.x !== lastVortex.position.x && edge.vortex1.position.y !== lastVortex.position.y && edge.vortex2.position.x !== lastVortex.position.x && edge.vortex2.position.y !== lastVortex.position.y);
             setedges(newEdges);
         }
         setSelectedVortex([]);
     }
-
+    
     useEffect(() => {
         // if the mouse in top of one of the vortexes : drow a green one in top of it 
         vortexes.some((vortex) => {
-            if (Math.abs(mousePosition.x - vortex.position.x) < 10 && Math.abs(mousePosition.y - vortex.position.y) < 10) {
+            if (Math.abs(mousePosition.x - vortex.position.x * scale - scrollx) < 10 && Math.abs(mousePosition.y - vortex.position.y * scale - scrolly) < 10) {
                 sethoveredVortex(vortex);
                 return true; // This will break out of the loop
             }
             sethoveredVortex(null)
             return false;
         });
+
+        if (isMouseDown && mode === "hand") {
+            setScrollx(old => old - (mousePosition.x - width * 0.5) * 0.01)
+            setScrolly(old => old - (mousePosition.y - height * 0.5) * 0.01)
+        }
+
     }, [mousePosition]);
     // ===> mouse event listeners   <===
     useEffect(() => {
@@ -132,14 +237,17 @@ export const DrawingContextProvider = ({ children }) => {
             canvas.removeEventListener('mousemove', handleMousemove);
         };
     }, []);
-        useEffect(() => {
-            document.addEventListener('keydown', (e) => {
+
+    useEffect(() => {
+        document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'z') {
                 e.preventDefault(); // Prevent the browser's default behavior
-                setundochangment (old=>!old) 
+                setundochangment(old => !old)
             }
-        });},[]);
-        useEffect(() => {undo()},[undochangment]);
+        });
+    }, []);
+
+    useEffect(() => { undo() }, [undochangment]);
 
     return (
         <DrowingContext.Provider
@@ -152,6 +260,18 @@ export const DrawingContextProvider = ({ children }) => {
                 canvasRef,
                 vortexes,
                 edges,
+                scrollx,
+                scrolly,
+                setScrolly,
+                setScrollx,
+                setScale,
+                handleMouseDown,
+                handleMouseUp,
+                setMode,
+                setundochangment,
+                mode,
+                scale,
+                backgroundCanvaref
             }}
         >
             {children}

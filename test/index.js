@@ -1,125 +1,158 @@
+class Node {
+    constructor(val, priority) {
+        this.val = val;
+        this.priority = priority;
+    }
+}
 class PriorityQueue {
     constructor() {
-        this.collection = [];
+        this.values = [];
     }
+    enqueue(val, priority) {
+        let newNode = new Node(val, priority);
+        this.values.push(newNode);
+        this.bubbleUp();
+    }
+    bubbleUp() {
+        let idx = this.values.length - 1;
+        const element = this.values[idx];
+        while (idx > 0) {
+            let parentIdx = Math.floor((idx - 1) / 2);
+            let parent = this.values[parentIdx];
+            if (element.priority >= parent.priority) break;
+            this.values[parentIdx] = element;
+            this.values[idx] = parent;
+            idx = parentIdx;
+        }
+    }
+    dequeue() {
+        const min = this.values[0];
+        const end = this.values.pop();
+        if (this.values.length > 0) {
+            this.values[0] = end;
+            this.sinkDown();
+        }
+        return min;
+    }
+    sinkDown() {
+        let idx = 0;
+        const length = this.values.length;
+        const element = this.values[0];
+        while (true) {
+            let leftChildIdx = 2 * idx + 1;
+            let rightChildIdx = 2 * idx + 2;
+            let leftChild, rightChild;
+            let swap = null;
 
-    enqueue(element) {
-        if (this.isEmpty()) {
-            this.collection.push(element);
-        } else {
-            let added = false;
-            for (let i = 0; i < this.collection.length; i++) {
-                if (element[1] < this.collection[i][1]) {
-                    this.collection.splice(i, 0, element);
-                    added = true;
-                    break;
+            if (leftChildIdx < length) {
+                leftChild = this.values[leftChildIdx];
+                if (leftChild.priority < element.priority) {
+                    swap = leftChildIdx;
                 }
             }
-            if (!added) {
-                this.collection.push(element);
+            if (rightChildIdx < length) {
+                rightChild = this.values[rightChildIdx];
+                if (
+                    (swap === null && rightChild.priority < element.priority) ||
+                    (swap !== null && rightChild.priority < leftChild.priority)
+                ) {
+                    swap = rightChildIdx;
+                }
             }
+            if (swap === null) break;
+            this.values[idx] = this.values[swap];
+            this.values[swap] = element;
+            idx = swap;
         }
-    }
-
-    dequeue() {
-        return this.collection.shift();
-    }
-
-    isEmpty() {
-        return this.collection.length === 0;
-    }
-
-    size() {
-        return this.collection.length;
     }
 }
 
-class Graph {
+//Dijkstra's algorithm only works on a weighted graph.
+
+class WeightedGraph {
     constructor() {
-        this.nodes = new Map();
+        this.adjacencyList = {};
     }
-
-    addNode(node) {
-        this.nodes.set(node, new Map());
+    addVertex(vertex) {
+        if (!this.adjacencyList[vertex]) this.adjacencyList[vertex] = [];
     }
-
-    addEdge(node1, node2, weight) {
-        this.nodes.get(node1).set(node2, weight);
+    addEdge(vertex1, vertex2, weight) {
+        this.adjacencyList[vertex1].push({ node: vertex2, weight });
+        this.adjacencyList[vertex2].push({ node: vertex1, weight });
     }
-
-    getNeighbors(node) {
-        return this.nodes.get(node);
-    }
-}
-
-function dijkstra(graph, startNode, endNode) {
-    const distances = new Map();
-    const previousNodes = new Map();
-    const nodes = graph.nodes;
-    const unvisitedNodes = new Set(nodes.keys());
-
-    distances.set(startNode, 0);
-
-    while (unvisitedNodes.size > 0) {
-        let currentNode = null;
-        let shortestDistance = Infinity;
-
-        for (let node of unvisitedNodes) {
-            let distance = distances.get(node);
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                currentNode = node;
+    Dijkstra(start, finish) {
+        const nodes = new PriorityQueue();
+        const distances = {};
+        const previous = {};
+        let path = []; //to return at end
+        let smallest;
+        //build up initial state
+        for (let vertex in this.adjacencyList) {
+            if (vertex === start) {
+                distances[vertex] = 0;
+                nodes.enqueue(vertex, 0);
+            } else {
+                distances[vertex] = Infinity;
+                nodes.enqueue(vertex, Infinity);
+            }
+            previous[vertex] = null;
+        }
+        // as long as there is something to visit
+        while (nodes.values.length) {
+            smallest = nodes.dequeue().val;
+            if (smallest === finish) {
+                //WE ARE DONE
+                //BUILD UP PATH TO RETURN AT END
+                while (previous[smallest]) {
+                    path.push(smallest);
+                    smallest = previous[smallest];
+                }
+                break;
+            }
+            if (smallest || distances[smallest] !== Infinity) {
+                for (let neighbor in this.adjacencyList[smallest]) {
+                    //find neighboring node
+                    let nextNode = this.adjacencyList[smallest][neighbor];
+                    //calculate new distance to neighboring node
+                    let candidate = distances[smallest] + nextNode.weight;
+                    let nextNeighbor = nextNode.node;
+                    if (candidate < distances[nextNeighbor]) {
+                        //updating new smallest distance to neighbor
+                        distances[nextNeighbor] = candidate;
+                        //updating previous - How we got to neighbor
+                        previous[nextNeighbor] = smallest;
+                        //enqueue in priority queue with new priority
+                        nodes.enqueue(nextNeighbor, candidate);
+                    }
+                }
             }
         }
-
-        if (shortestDistance === Infinity) {
-            break;
-        }
-
-        unvisitedNodes.delete(currentNode);
-
-        if (currentNode === endNode) {
-            break;
-        }
-
-        for (let neighbor of graph.getNeighbors(currentNode).keys()) {
-            let distanceToNeighbor = distances.get(currentNode) + graph.getNeighbors(currentNode).get(neighbor);
-
-            if (!distances.has(neighbor) || distanceToNeighbor < distances.get(neighbor)) {
-                distances.set(neighbor, distanceToNeighbor);
-                previousNodes.set(neighbor, currentNode);
-            }
-        }
+        return path.concat(smallest).reverse();
     }
-
-    const path = [];
-    let currentNode = endNode;
-
-    while (currentNode !== undefined) {
-        path.unshift(currentNode);
-        currentNode = previousNodes.get(currentNode);
-    }
-
-    return path;
 }
 
 
 
+class FastPathFinder{
+getkey = (node) => `x:${node.position.x},y:${node.position.y}`
+constructor(nodes,edges){
+    this.nodes = nodes;
+    this.edges = edges;
+    this.graph = new WeightedGraph();
+    this.nodes.forEach(node => this.graph.addVertex(getkey(node)));
+    this.edges.forEach(edge => this.graph.addEdge(getkey(edge.vortex1), getkey(edge.vortex2),((edge.vortex1.position.x - edge.vortex2.position.x) * (edge.vortex1.position.x - edge.vortex2.position.x) )+ ((edge.vortex1.position.y - edge.vortex2.position.y) * (edge.vortex1.position.y - edge.vortex2.position.y))))
+}
+findvortexes(start,finish){
+    return this.graph.Dijkstra(getkey(start), getkey(finish));
+}
+findEdges(start , finish ){
+    const vortexes = this.findvortexes(start,finish);
+    const edges = [];
+    for(let i = 0; i < vortexes.length-1; i++){
+        edges.push({vortex1:this.nodes.find(node => getkey(node) === vortexes[i]),vortex2:this.nodes.find(node => getkey(node) === vortexes[i+1])})
+    }
+    return edges;
+}
+}
 
-let graph = new Graph();
-graph.addNode('A');
-graph.addNode('B');
-graph.addNode('C');
-graph.addNode('D');
-graph.addNode('E');
-
-graph.addEdge('A', 'B', 3);
-graph.addEdge('A', 'C', 1);
-graph.addEdge('B', 'C', 2);
-graph.addEdge('B', 'D', 4);
-graph.addEdge('C', 'D', 2);
-graph.addEdge('C', 'E', 5);
-graph.addEdge('D', 'E', 1);
-
-let shortestPath = dijkstra(graph, 'A', 'E');
-console.log(shortestPath); // ['A', 'C', 'D', 'E']
+const pathfinder = new FastPathFinder(nodes,edges);
