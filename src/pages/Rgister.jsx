@@ -1,8 +1,7 @@
-import { faGlassCheers } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../LANDING/pathy.png"
+import logo from "../assets/all-pahts.png"
 
 import { server } from "../Backedn";
 

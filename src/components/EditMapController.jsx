@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import DrowingContext from '../context/drowingContext';
+import DrowingContext from '../context/singlemapContext';
 import handicon from '../hand.svg'
 import jumpicon from '../jump.png'
 const ControleComponenetAdmin = () => {

@@ -11,38 +11,35 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Register from './pages/Rgister';
 import { AuthContext, AuthContextProvider } from './context/authcontext';
+import {MapsContextProvider} from './context/mapsContext';
 
  
 function App() {  
   return (
 <AuthContextProvider>
+  
       <BrowserRouter>
-     
         <Routes>
-          {//root 
-          }
           <Route path="/" element={<Home />} exact></Route>
           <Route path="/about" element={<About />}></Route>
-          
-          <Route path="/application" element={< ProtectedRoute> <Application /></ProtectedRoute>}></Route>
+          <Route path="/application" element={< ProtectedRoute><MapsContextProvider> <Application />   </MapsContextProvider> </ProtectedRoute>}></Route>
           <Route path="/user" element={<User />}></Route>
           <Route path="/Contact" element={<Contact />}></Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="*" element={<Navigate to="/" />}></Route>
         </Routes>
-      </BrowserRouter>
-          </AuthContextProvider>
+      </BrowserRouter>   
+    
+      </AuthContextProvider>
   );
 }
 
 export const ProtectedRoute = ({ children }) => {  
   const { user } = useContext(AuthContext);
-
     if (!user) {
     return   <Navigate to="/login" replace={true} />;
     } 
     else
-
   return children;}
 export default App;

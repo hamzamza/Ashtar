@@ -1,19 +1,28 @@
 import React, { createContext, useState, useEffect, useRef } from "react";
-import { FastPathFinder } from "../algorithms/djikstra"
+import { FastPathFinder } from "../utils/algorithms/djikstra"
 // import GlobalContext from "./globalContext";
-
+import http from "../utils/http"
 const DrowingContext = createContext();
-
 export const DrawingContextProvider = ({ children }) => {
     // buliding and rendering 
 
     // vortext class : vortex{ x , y , id}
     // line class : line { vortex1 , vortex2 , id}
     // ===> states  <===
-    const width = 1280;
-    const height = 720;
+const OriginalWidth = 1280;
+const OriginalHeight = 720; 
+ const width= window.innerWidth/1.5;
+const height= (width * OriginalHeight) / OriginalWidth;
+ // drag code 
+ const [startX, setStartX] = useState(0);
+ const [startY, setStartY] = useState(0);
+ const [currentX, setCurrentX] = useState(0);
+ const [currentY, setCurrentY] = useState(0);    
+ const [isDragging, setIsDragging] = useState(false);
+
     const canvasRef = useRef(null);
     const [startAndEndvortex, setStartAndEndvortex] = useState([]); // [start , end ] 
+    const [pathvortexes, setpathvortexes] = useState([]); // [start , end
     const [shortestPath, setSchortestPath] = useState(null); // [line , line , line
     const backgroundCanvaref = useRef(null);
     const [mode, setMode] = useState("vortex");
@@ -23,6 +32,9 @@ export const DrawingContextProvider = ({ children }) => {
     const [scrollx, setScrollx] = useState(0); // 0 - 1
     const [scrolly, setScrolly] = useState(0); // 0 - 1
     const [edges, setedges] = useState([]);
+    const [map, setmap] = useState({})
+    const [loading, setLoading] = useState(true)
+
     const [pathConfig, setPathconfig] = useState({
         vortexSize: 8, edgeSize: 15, border: true,
         strokeColor: "#f8b51c", shortpathColor: "#a8b51f", scalefactor: 2,
@@ -35,25 +47,30 @@ export const DrawingContextProvider = ({ children }) => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [imageurl, setImageurl] = useState("/map1.png");
 
-    // const scrollHorizontally=(evt)=>{
-    //     var rect = horizontalscrollRef.current.getBoundingClientRect();
-    //     const x= evt.clientX - rect.left
-    //     const   percentToMove = x/width
-    //     setScrollx(x)
-    // }
-    // const scrollhoriVertically=(evt)=>{
-    //     var rect = verticalscrollRef.current.getBoundingClientRect();
-    //     const y =  evt.clientY - rect.top
-    //     setScrolly( y)
-    // }
+    const getmapdetails = (id) => {
+        setLoading(false)
+        http.axiosInstance.get("/map/" + id).then((res) => { console.log(res.data); setmap(res.data) })
+
+        setLoading(true)
+    }
+
+
     // ===> functions  <===
 
+
+  
     const handleMouseDown = () => {
         setIsMouseDown(true);
     };
 
     // Mouse up event handler
     const handleMouseUp = () => {
+            setIsDragging(false);
+            // Reset the positions when the mouse is released
+            setStartX(0);
+            setStartY(0);
+            setCurrentX(0);
+            setCurrentY(0);
         setIsMouseDown(false);
     };
 
@@ -64,11 +81,14 @@ export const DrawingContextProvider = ({ children }) => {
             y: evt.clientY - rect.top
         };
     }
-    function findPath(v1  , v2 , vortexes , edges ) {
-        let graph = new FastPathFinder(vortexes , edges );
-        let shortestPaths = graph.findEdges(v1 , v2);
-        console.log(shortestPaths);
+    function findPath(v1, v2, vortexes, edges) {
+        let graph = new FastPathFinder(vortexes, edges);
+        let shortestPaths = graph.findEdges(v1, v2);
         setSchortestPath(shortestPaths);
+        const pathvortexess = shortestPaths.map((edge) => { return edge.vortex1 })
+        if(shortestPaths.length>0)
+        pathvortexess.push(shortestPaths[shortestPaths.length - 1].vortex2)
+        setpathvortexes(pathvortexess)
         setStartAndEndvortex([]);
     }
     const draw = (evt) => {
@@ -90,24 +110,23 @@ export const DrawingContextProvider = ({ children }) => {
             }
             if (mode === "path") {
                 if (hoveredVortex != null)
-                    if(startAndEndvortex.length < 2 )
-                        {
-                            console.log(`firstvortex number ${startAndEndvortex.length+1}` + hoveredVortex);
-                          console.log(hoveredVortex);
-                            setStartAndEndvortex(old => [...old, hoveredVortex]);   
-                        }
-                        else{
-                            console.log(`firstvortex number  1}` + hoveredVortex);
-                            setStartAndEndvortex([hoveredVortex]);
-                        }
-                }
-            
+                    if (startAndEndvortex.length < 2) {
+                        console.log(`firstvortex number ${startAndEndvortex.length + 1}` + hoveredVortex);
+                        console.log(hoveredVortex);
+                        setStartAndEndvortex(old => [...old, hoveredVortex]);
+                    }
+                    else {
+                        console.log(`firstvortex number  1}` + hoveredVortex);
+                        setStartAndEndvortex([hoveredVortex]);
+                    }
+            }
+
 
 
         }
     }
 
-    const putEdge = (position1, position2, color , bordercolor ) => {
+    const putEdge = (position1, position2, color, bordercolor) => {
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
         context.lineWidth = vortexSize * 2;
@@ -131,7 +150,7 @@ export const DrawingContextProvider = ({ children }) => {
         const ctx = canvas.getContext('2d');
         ctx.beginPath();
         ctx.arc(position.x, position.y, size + 2, 0, 2 * Math.PI);
-        ctx.fillStyle = "#f8b51c"; // Set the fill color
+        ctx.fillStyle = color; // Set the fill color
         ctx.fill();
         ctx.closePath();
         ctx.beginPath();
@@ -150,9 +169,10 @@ export const DrawingContextProvider = ({ children }) => {
         image.src = imageurl;
         image.onload = () => {
             ctx.clearRect(0, 0, width, height);
-            ctx.drawImage(image, 0, 0, (image.width / image.height) * height, height);
+            ctx.drawImage(image, 0, 0, width ,  (image.height / image.width) * width);
         };
     }, [])
+
 
     useEffect(() => {
         const backgrouncanva = backgroundCanvaref.current;
@@ -161,7 +181,8 @@ export const DrawingContextProvider = ({ children }) => {
         ctx.clearRect(0, 0, width, height);
         image.src = imageurl;
         ctx.setTransform(scale, 0, 0, scale, scrollx, scrolly);
-        ctx.drawImage(image, 0, 0, (image.width / image.height) * height, height);
+        ctx.drawImage(image, 0, 0, width ,  (image.height / image.width) * width);
+
     }, [scale, scrollx, scrolly])
 
     // ===> rendering the canvas    <===
@@ -171,7 +192,7 @@ export const DrawingContextProvider = ({ children }) => {
         ctx.clearRect(0, 0, width, height);
         ctx.setTransform(scale, 0, 0, scale, scrollx, scrolly);
         edges.forEach((line) => {
-            putEdge(line.vortex1.position, line.vortex2.position , "#fde293", "#f8b51c");
+            putEdge(line.vortex1.position, line.vortex2.position, "#fde293", "#f8b51c");
         })
         vortexes.forEach((vortex) => {
             putVortext(vortex.position, "yellow", vortexSize);
@@ -182,15 +203,26 @@ export const DrawingContextProvider = ({ children }) => {
         selectedVortex.forEach((vortex) => {
             putVortext(vortex.position, "blue", vortexSize + 2);
         })
-        if(shortestPath!=null)
-        shortestPath.forEach((edge) => {
-            putEdge(edge.vortex1.position, edge.vortex2.position ,"green","#f8b51c");
-        })
-       if(startAndEndvortex.length==2){
-           findPath(startAndEndvortex[0],startAndEndvortex[1] ,vortexes , edges);
-       }
+        if (shortestPath != null)
+            shortestPath.forEach((edge) => {
+                putEdge(edge.vortex1.position, edge.vortex2.position, "green", "#f8b51c");
+            })
+        if (startAndEndvortex.length == 2) {
+            findPath(startAndEndvortex[0], startAndEndvortex[1], vortexes, edges);
+        }
 
-    }, [vortexes, startAndEndvortex , edges, hoveredVortex, scale, scrollx, scrolly]);
+        if (pathvortexes != null) {
+            pathvortexes.forEach((vortex) => {
+                putVortext(vortex.position, "green", vortexSize + 2);
+            })
+            if (pathvortexes.length > 0)
+                putVortext(pathvortexes[pathvortexes.length - 1].position, "green", vortexSize + 2);
+              }
+
+
+
+
+    }, [vortexes, startAndEndvortex, edges, hoveredVortex, scale, scrollx, scrolly]);
 
     // ==> undo the last added vortex and its related edges
     const undo = () => {
@@ -204,7 +236,7 @@ export const DrawingContextProvider = ({ children }) => {
         }
         setSelectedVortex([]);
     }
-    
+
     useEffect(() => {
         // if the mouse in top of one of the vortexes : drow a green one in top of it 
         vortexes.some((vortex) => {
@@ -219,6 +251,7 @@ export const DrawingContextProvider = ({ children }) => {
         if (isMouseDown && mode === "hand") {
             setScrollx(old => old - (mousePosition.x - width * 0.5) * 0.01)
             setScrolly(old => old - (mousePosition.y - height * 0.5) * 0.01)
+            
         }
 
     }, [mousePosition]);
@@ -252,7 +285,6 @@ export const DrawingContextProvider = ({ children }) => {
     return (
         <DrowingContext.Provider
             value={{
-                // pass arguemnts here to use it 
                 width,
                 draw,
                 putVortext,
@@ -262,15 +294,16 @@ export const DrawingContextProvider = ({ children }) => {
                 edges,
                 scrollx,
                 scrolly,
-                setScrolly,
+                setScrolly, getmapdetails,
                 setScrollx,
                 setScale,
                 handleMouseDown,
                 handleMouseUp,
                 setMode,
                 setundochangment,
+               
                 mode,
-                scale,
+                scale, loading,
                 backgroundCanvaref
             }}
         >

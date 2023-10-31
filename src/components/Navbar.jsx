@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import  logo from '../LANDING/all-pahts.png'
-import logodark from '../LANDING/LOGOWHITE.png'
+import {   useState } from "react";
+import  logo from '../assets/all-pahts.png' 
 import { Link } from "react-router-dom";
- import user from '../LANDING/user.svg'
+ import user from '../assets/user.svg'
 function Navbar( {active,orange,dark, small}) {
      const [menuactive , setmenuactive ] = useState(false);
         const toggle =()=>{

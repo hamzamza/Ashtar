@@ -5,7 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { server } from "../Backedn";
 
 import { AuthContext } from "../context/authcontext";
-import logo from "../LANDING/all-pahts.png"
+import logo from "../assets/all-pahts.png"
+import http from "../utils/http";
 
 function Login() {
     const LOGIN_START = "LOGIN_START";
@@ -15,23 +16,12 @@ function Login() {
     const navigagte = useNavigate();
     //
     const [credentials, setCredentials] = useState({
-        username: undefined,
+        email: undefined,
         password: undefined,
     });
 
     const { loading, error, dispatch } = useContext(AuthContext);
-    /*const handelChange = (e) => {
-      switch (e.taget.id) {
-        case "username":
-          setCredentials({ username: e.taget.value });
-          break;
-        case "password":
-          setCredentials({ password: e.taget.value });
-          break;
-        default:
-          break;
-      }
-    };*/
+ 
     const handelChange = (e) => {
         setCredentials((prev) => ({ ...prev, [e.target.id]: e.target.value }));
     };
@@ -40,16 +30,12 @@ function Login() {
 
         dispatch({ type: LOGIN_START });
         try {
-            const response = await axios.post(
-                server + "/api/auth/login",
-                credentials
-            );
-            await dispatch({ type: LOGIN_SUCCESS, payload: response.data.details });
-
+              const response = await http.loginAxiosInstance.post("/login", credentials)
+              localStorage.setItem("token",  response.data.token )
+             await dispatch({ type: LOGIN_SUCCESS, payload: response.data.details });
             navigagte("/Application", { replace: true });
         } catch (er) {
-
-            dispatch({ type: LOGIN_FAILER, payload: er.response.data });
+                dispatch({ type: LOGIN_FAILER, payload: "er.response.data" });
         }
     };
     return (
@@ -69,7 +55,7 @@ function Login() {
                             <form className="space-y-4 md:space-y-6" action="#">
                                 <div>
                                     <label for="email" className="block mb-2 text-sm font-medium text-gray-900">Your email</label>
-                                    <input id="username" onChange={handelChange} value={credentials.username} name="email" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 " placeholder="name@company.com" />
+                                    <input id="email" onChange={handelChange} value={credentials.email} name="email" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 " placeholder="name@company.com" />
                                 </div>
                                 <div>
                                     <label for="password" className="block mb-2 text-sm font-medium text-gray-900 " >Password</label>
