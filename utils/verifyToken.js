@@ -3,7 +3,12 @@ import err from "../errors/createError.js"
 
 
 const verifyToken = (req, res, next) => {
-    const token= req.cookies.access_token
+    const authorizationHeader = req.headers['authorization'];
+    if (!authorizationHeader) {
+        return  next( err.createError(`you are not authorized `, 501))
+      }
+    const token = authorizationHeader.replace('Bearer ', '');
+
     if (!token) {
         return next(err.createError(`you'r not authontoficated!`, 500))
     }
@@ -11,7 +16,10 @@ const verifyToken = (req, res, next) => {
         if (error) {
             throw err.createError(`token is not valid`, 500)
         }
+        console.log("--------------------");
+        console.log(user);
         req.user  = user 
+        req.userId = user.id
         next()
     })
 }
@@ -21,7 +29,7 @@ const verifyUser = (req, res, next) => {
             if (req.user.id == req.params.id  ) {
                 return next()
             }
-            throw err.createError(`ure not the owner for this token`, 504)
+           return  next( err.createError(`ure not the owner for this token`, 504))
         })
     }
     catch (error) {

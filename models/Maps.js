@@ -3,6 +3,45 @@ const { Schema } = mongoose;
 
 const MapSchema = new Schema({
     name: {type : String , required : true},   
+    vortexes: {
+        type: [
+            { _id: false,
+                position: {
+                    type: { _id: false,
+                        x: Number,
+                        y: Number
+                    },
+                    requiredPaths: true
+                },
+                label: String
+            }
+        ],
+        default: []
+    },
+    edges: {
+        type: [
+            { _id: false,
+                vortex1: {
+                    type: {
+                        _id: false,
+                        x: Number,
+                        y: Number
+                    },
+                    requiredPaths: true
+                },
+                vortex2: {
+                    type: {
+                        _id: false,
+                        x: Number,
+                        y: Number
+                    },
+                    requiredPaths: true
+                },
+                label: String
+            }
+        ],
+        default: []
+    },
     owner : {type : String , required : true},
     description: {type : String , required : true},
     image: {type : String , required : true},

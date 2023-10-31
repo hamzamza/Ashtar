@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 
 import connectDb from "./connection.js";
 import authRouter from "./routes/auth.js";
+import mapRouter from "./routes/maps.js";
 import errornotfournd from "./middlewares/errornotfound.js"
 import errorhanler from "./middlewares/errorhandler.js"
 import cors from "cors"
@@ -20,7 +21,7 @@ const port = process.env.PORT || 5000
 const secret = process.env.MONGO;
 
 app.use('/api/auth', authRouter)
-
+app.use('/api/map', mapRouter )
 // errors
 app.use(errorhanler);
 app.use(errornotfournd);
