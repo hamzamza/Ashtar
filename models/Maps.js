@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const MapSchema = new Schema({
-    name: {type : String , required : true},   
+    title: {type : String , required : true},   
     vortexes: {
         type: [
             { _id: false,
@@ -21,21 +21,25 @@ const MapSchema = new Schema({
     edges: {
         type: [
             { _id: false,
-                vortex1: {
-                    type: {
-                        _id: false,
-                        x: Number,
-                        y: Number
+                vortex1: { _id: false,
+                    position: {
+                        type: { _id: false,
+                            x: Number,
+                            y: Number
+                        },
+                        requiredPaths: true
                     },
-                    requiredPaths: true
+                    label: String
                 },
-                vortex2: {
-                    type: {
-                        _id: false,
-                        x: Number,
-                        y: Number
+                vortex2: { _id: false,
+                    position: {
+                        type: { _id: false,
+                            x: Number,
+                            y: Number
+                        },
+                        requiredPaths: true
                     },
-                    requiredPaths: true
+                    label: String
                 },
                 label: String
             }
@@ -44,8 +48,9 @@ const MapSchema = new Schema({
     },
     owner : {type : String , required : true},
     description: {type : String , required : true},
-    image: {type : String , required : true},
-    bgColor : {type : String , default : "#000000"},
+    url: {type : String , required : true},
+    image:{type : String , required : true },
+     bgColor : {type : String , default : "#000000"},
     vortexColor : {type : String , default : "#ffffff"},
     vortexSize : {type : Number , default : 2},
     edgesColor : {type : String , default : "#ffffff"},
