@@ -15,7 +15,7 @@ function CreateProjectForm() {
         const formData = new FormData();
         formData.append('image', file);
 
-        fetch('http://localhost:5000/api/upload', {
+        fetch( process.env.REACT_APP_API_URL+ '/upload', {
             method: 'POST',
             body: formData,
         })

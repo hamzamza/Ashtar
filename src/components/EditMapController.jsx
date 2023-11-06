@@ -45,7 +45,7 @@ const ControleComponenetAdmin = () => {
         </section >
     <section> 
     <button onClick={updatemap}  className={"w-full border-2 hover:bg-blue-700 bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-blue-600" }> save changes  </button>
-    <input type="text" className=' w-full p-2 rounded-md border-2 border-blue-400 mt-2 bg-gray-100' name="" id="" value={"http://localhost:3000/viewmap/"+ map._id} contentEditable={false} />
+    <input type="text" className=' w-full p-2 rounded-md border-2 border-blue-400 mt-2 bg-gray-100' name="" id="" value={"https://allpaths.vercel.app/viewmap/"+ map._id} contentEditable={false} />
     </section>
 
 
