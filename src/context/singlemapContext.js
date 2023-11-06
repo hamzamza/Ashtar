@@ -9,17 +9,16 @@ export const DrawingContextProvider = ({ children }) => {
     // vortext class : vortex{ x , y , id}
     // line class : line { vortex1 , vortex2 , id}
     // ===> states  <===
-const OriginalWidth = 1280;
-const OriginalHeight = 720; 
- const width= window.innerWidth/1.5;
-const height= (width * OriginalHeight) / OriginalWidth;
- // drag code 
- const [startX, setStartX] = useState(0);
- const [startY, setStartY] = useState(0);
- const [currentX, setCurrentX] = useState(0);
- const [currentY, setCurrentY] = useState(0);    
- const [isDragging, setIsDragging] = useState(false);
-
+    const OriginalWidth = 1280;
+    const OriginalHeight = 720;
+    const [width, setwidth ] =useState( window.innerWidth / 1.5);
+    const [height, setheight ] = useState((width * OriginalHeight) / OriginalWidth);
+    // drag code 
+ 
+    const [startX, setStartX] = useState(0);
+    const [startY, setStartY] = useState(0);
+    const [currentX, setCurrentX] = useState(0);
+    const [currentY, setCurrentY] = useState(0);
     const canvasRef = useRef(null);
     const [startAndEndvortex, setStartAndEndvortex] = useState([]); // [start , end ] 
     const [pathvortexes, setpathvortexes] = useState([]); // [start , end
@@ -34,44 +33,54 @@ const height= (width * OriginalHeight) / OriginalWidth;
     const [edges, setedges] = useState([]);
     const [map, setmap] = useState({})
     const [loading, setLoading] = useState(true)
-
-    const [pathConfig, setPathconfig] = useState({
-        vortexSize: 8, edgeSize: 15, border: true,
-        strokeColor: "#f8b51c", shortpathColor: "#a8b51f", scalefactor: 2,
-        hoverColor: "green", selectedColor: "blue", unselectedColor: "yellow"
-    })
+    const [lastScrollx, setLastScrollx] = useState(0)
+    const [lastScrolly, setLastScrolly] = useState(0)
+   
     const [isMouseDown, setIsMouseDown] = useState(false);
     const [scale, setScale] = useState(1);
     const [vortexSize, setvortexSize] = useState(7);
     const [undochangment, setundochangment] = useState(false);
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [imageurl, setImageurl] = useState("/map1.png");
+    const [imageurl, setImageurl] = useState("");
 
-    const getmapdetails = (id) => {
-        setLoading(false)
-        http.axiosInstance.get("/map/" + id).then((res) => { console.log(res.data); setmap(res.data) })
-
+    const getmapdetails = (map) => {
+         setLoading(false)
+        setImageurl(map.url)
+        setvortexes(map.vortexes)
+        console.log(map.edges);
+        setedges(map.edges)
+        setmap(map)
+        setSelectedVortex([])
         setLoading(true)
+        setScrollx(0)
+        setScrolly(0)
     }
 
 
     // ===> functions  <===
 
 
-  
-    const handleMouseDown = () => {
+
+    const handleMouseDown = (e) => {
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        setStartX(x);
+        setStartY(y);
         setIsMouseDown(true);
     };
 
     // Mouse up event handler
     const handleMouseUp = () => {
-            setIsDragging(false);
-            // Reset the positions when the mouse is released
-            setStartX(0);
-            setStartY(0);
-            setCurrentX(0);
-            setCurrentY(0);
+        // Reset the positions when the mouse is released
+        setStartX(0);
+        setStartY(0);
+        setCurrentX(0);
+        setCurrentY(0);
         setIsMouseDown(false);
+        setLastScrollx(scrollx)
+        setLastScrolly(scrolly)
     };
 
     function getMousePos(evt) {
@@ -86,8 +95,8 @@ const height= (width * OriginalHeight) / OriginalWidth;
         let shortestPaths = graph.findEdges(v1, v2);
         setSchortestPath(shortestPaths);
         const pathvortexess = shortestPaths.map((edge) => { return edge.vortex1 })
-        if(shortestPaths.length>0)
-        pathvortexess.push(shortestPaths[shortestPaths.length - 1].vortex2)
+        if (shortestPaths.length > 0)
+            pathvortexess.push(shortestPaths[shortestPaths.length - 1].vortex2)
         setpathvortexes(pathvortexess)
         setStartAndEndvortex([]);
     }
@@ -144,7 +153,13 @@ const height= (width * OriginalHeight) / OriginalWidth;
         context.stroke();
         context.closePath();
     };
-
+    const updatemap= ()=>{
+        
+        map.vortexes = vortexes 
+        map.edges = edges 
+        console.log(map);
+        http.axiosInstance.put("/map/"+ map._id, map).then(res => {console.log("updated");}).catch(erro=> console.log(erro))
+    }
     const putVortext = (position, color, size) => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -165,13 +180,16 @@ const height= (width * OriginalHeight) / OriginalWidth;
         const ctx = backgrouncanva.getContext('2d');
         const image = new Image();
         ctx.clearRect(0, 0, width, height);
+
         ctx.setTransform(scale, 0, 0, scale, scrollx, scrolly);
         image.src = imageurl;
         image.onload = () => {
             ctx.clearRect(0, 0, width, height);
-            ctx.drawImage(image, 0, 0, width ,  (image.height / image.width) * width);
+      
+            ctx.drawImage(image, 1, 1,(image.width / image.height) * height -1, height-1 );
+
         };
-    }, [])
+    }, [imageurl])
 
 
     useEffect(() => {
@@ -181,9 +199,13 @@ const height= (width * OriginalHeight) / OriginalWidth;
         ctx.clearRect(0, 0, width, height);
         image.src = imageurl;
         ctx.setTransform(scale, 0, 0, scale, scrollx, scrolly);
-        ctx.drawImage(image, 0, 0, width ,  (image.height / image.width) * width);
+        ctx.clearRect(0, 0, width, height);
 
-    }, [scale, scrollx, scrolly])
+        ctx.drawImage(image, 1, 1,(image.width / image.height) * height -1, height-1 );
+
+
+
+    }, [scale, scrollx, scrolly,imageurl])
 
     // ===> rendering the canvas    <===
     useEffect(() => {
@@ -217,7 +239,7 @@ const height= (width * OriginalHeight) / OriginalWidth;
             })
             if (pathvortexes.length > 0)
                 putVortext(pathvortexes[pathvortexes.length - 1].position, "green", vortexSize + 2);
-              }
+        }
 
 
 
@@ -237,10 +259,18 @@ const height= (width * OriginalHeight) / OriginalWidth;
         setSelectedVortex([]);
     }
 
-    useEffect(() => {
-        // if the mouse in top of one of the vortexes : drow a green one in top of it 
+
+ 
+    const handleMousemove = (e, startx, starty) => {
+        const image = new Image();
+        image.src = imageurl;
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        if(x<0 || y<0 || x>width || y>height) return setIsMouseDown(false)
         vortexes.some((vortex) => {
-            if (Math.abs(mousePosition.x - vortex.position.x * scale - scrollx) < 10 && Math.abs(mousePosition.y - vortex.position.y * scale - scrolly) < 10) {
+            if (Math.abs(x - vortex.position.x * scale - scrollx) < 10 && Math.abs(y - vortex.position.y * scale - scrolly) < 10) {
                 sethoveredVortex(vortex);
                 return true; // This will break out of the loop
             }
@@ -248,28 +278,18 @@ const height= (width * OriginalHeight) / OriginalWidth;
             return false;
         });
 
-        if (isMouseDown && mode === "hand") {
-            setScrollx(old => old - (mousePosition.x - width * 0.5) * 0.01)
-            setScrolly(old => old - (mousePosition.y - height * 0.5) * 0.01)
-            
+        if (mode === "hand" && isMouseDown) {
+            // if the image is finished 
+            // if teh hand is out of the box , you should not folow it anymore 
+         
+            setScrollx(lastScrollx + ((x - startx) * 0.7))
+               
+            setScrolly(lastScrolly + ((y - starty) * 0.7))
         }
-
-    }, [mousePosition]);
+    };
     // ===> mouse event listeners   <===
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        const handleMousemove = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            if (x > 0 && x < width && y > 0 && y < height)
-                setMousePosition({ x, y });
-        };
-        canvas.addEventListener('mousemove', handleMousemove);
-        return () => {
-            canvas.removeEventListener('mousemove', handleMousemove);
-        };
-    }, []);
+
+    // ===> keyboard event listeners    <===
 
     useEffect(() => {
         document.addEventListener('keydown', (e) => {
@@ -288,22 +308,24 @@ const height= (width * OriginalHeight) / OriginalWidth;
                 width,
                 draw,
                 putVortext,
-                height,
+                height,map,
                 canvasRef,
                 vortexes,
                 edges,
-                scrollx,
+                handleMousemove,
+                scrollx,setwidth, setheight,
                 scrolly,
                 setScrolly, getmapdetails,
                 setScrollx,
                 setScale,
                 handleMouseDown,
                 handleMouseUp,
-                setMode,
+                setMode,setmap,
                 setundochangment,
-               
-                mode,
+                startX, startY,
+                mode,updatemap,
                 scale, loading,
+                  
                 backgroundCanvaref
             }}
         >

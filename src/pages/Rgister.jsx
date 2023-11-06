@@ -23,18 +23,7 @@ function Register() {
   });
   const [msg, setmsg] = useState("");
   const { loading, error, dispatch } = useContext(AuthContext);
-  /*const handelChange = (e) => {
-      switch (e.taget.id) {
-        case "username":
-          setCredentials({ username: e.taget.value });
-          break;
-        case "password":
-          setCredentials({ password: e.taget.value });
-          break;
-        default:
-          break;
-      }
-    };*/
+ 
   const handelChange = (e) => {
     setCredentials((prev) => ({ ...prev, [e.target.id]: e.target.value, terms: isaccepted }));
   };
@@ -52,7 +41,7 @@ function Register() {
           server + "/api/auth/register",
           { username, email, password }
         );
-        await handellogin()
+        navigagte("/login");
 
       } catch (error) {
 
@@ -65,8 +54,6 @@ function Register() {
 
   }
   const handellogin = async () => {
-
-
 
     dispatch({ type: LOGIN_START });
     const { username, password } = credentials;

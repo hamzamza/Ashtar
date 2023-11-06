@@ -6,13 +6,13 @@ import { useContext, useEffect, useState } from 'react';
 import Home from './pages/Home';
 import About from './pages/About';
 import Application from './pages/Application';
-import User from './pages/User';
+import ViewMap from './pages/ViewMap';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Register from './pages/Rgister';
 import { AuthContext, AuthContextProvider } from './context/authcontext';
 import {MapsContextProvider} from './context/mapsContext';
-
+import {DrawingContextProvider} from './context/singlemapContext';
  
 function App() {  
   return (
@@ -23,7 +23,7 @@ function App() {
           <Route path="/" element={<Home />} exact></Route>
           <Route path="/about" element={<About />}></Route>
           <Route path="/application" element={< ProtectedRoute><MapsContextProvider> <Application />   </MapsContextProvider> </ProtectedRoute>}></Route>
-          <Route path="/user" element={<User />}></Route>
+         <Route path="/viewmap/:id" element={<DrawingContextProvider><ViewMap /></DrawingContextProvider>}></Route>
           <Route path="/Contact" element={<Contact />}></Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
