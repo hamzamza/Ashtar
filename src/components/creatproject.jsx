@@ -8,7 +8,7 @@ function CreateProjectForm() {
     const [credentials, setCredentials] = useState({image:null , title : null , description : null})
    const handelChange=(e)=>{
         setCredentials(prev => ({ ...prev, [e.target.id]: e.target.value }))
-        console.log(maps);
+      
    }
    
     const handelupload = (file) => {
