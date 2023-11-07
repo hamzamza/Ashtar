@@ -13,43 +13,45 @@ cloudinary.config({
   api_secret: process.env.SECRET_API,
 });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null,   file.originalname);
-  },
+const storage = new multer.memoryStorage();
+const upload = multer({
+  storage,
 });
 
-const upload = multer({ storage: storage });
+ 
 
 const uloadtoCloudinary =async (req, res) => {
-    console.log(req.file.filename);
-try {
-    await cloudinary.uploader.upload(
-        './uploads/' + req.file.filename,
-        { public_id: uuidv4()+ req.file.filename },
-        (error, result) => {
-          if (error) { 
-            console.error(error);
-            return res.status(500).json({ error: 'Upload to Cloudinary failed' });
-          }
-          fs.unlink('uploads/' + req.file.filename, (err) => {
-            if (err) { 
-              console.error(err);
-            }
-       
-            console.log('Local file deleted');
-          });
-          return res.status(200).json({imageurl : result.url, name: req.file.filename });
-        }
-      );
-} catch (error) {
-    console.log(error);
-}
+ 
+    try {
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+      let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+      const cldRes = await handleUpload(dataURI);
+      res.status(200).json({name : req.file.originalname , imageurl: cldRes.secure_url});
+      console.log("everything is good");
+    } catch (error) {
+      console.log(error);
+      res.status(400).send({
+        msg: "can't get"
+      });
+    }
   res.status(200).json({ msg: "we don't know what happens" });
 };
 router.route('/').post(upload.single('image'), uloadtoCloudinary);
 
 export default router;
+
+
+
+
+ 
+
+async function handleUpload(file) {
+  const res = await cloudinary.uploader.upload(file, 
+   {public_id: uuidv4()+ file.filename ,resource_type: "auto", },
+   (error, result) => {
+    if (error) { 
+      throw new Error("error");
+    }
+  });
+  return res;
+}
