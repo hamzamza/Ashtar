@@ -20,8 +20,6 @@ function NonEditedMap({id}) {
 
        useEffect(() => {
         setMode("path")
-        setwidth(window.innerWidth )
-        setheight(window.innerHeight )
             http.axiosInstance.get(`/map/${id}`).then((res) => {
                 console.log(res.data);
                 getmapdetails(res.data)

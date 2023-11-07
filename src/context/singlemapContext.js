@@ -4,16 +4,12 @@ import { FastPathFinder } from "../utils/algorithms/djikstra"
 import http from "../utils/http"
 const DrowingContext = createContext();
 export const DrawingContextProvider = ({ children }) => {
-    // buliding and rendering 
-
-    // vortext class : vortex{ x , y , id}
-    // line class : line { vortex1 , vortex2 , id}
-    // ===> states  <===
+ 
     const OriginalWidth = 1280;
     const OriginalHeight = 720;
     const [width, setwidth ] =useState( window.innerWidth / 1.5);
     const [height, setheight ] = useState((width * OriginalHeight) / OriginalWidth);
-    // drag code 
+ 
  
     const [startX, setStartX] = useState(0);
     const [startY, setStartY] = useState(0);

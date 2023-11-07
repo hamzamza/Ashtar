@@ -8,14 +8,13 @@ function CreateProjectForm() {
     const [credentials, setCredentials] = useState({image:null , title : null , description : null})
    const handelChange=(e)=>{
         setCredentials(prev => ({ ...prev, [e.target.id]: e.target.value }))
-      
+
    }
    
     const handelupload = (file) => {
         const formData = new FormData();
-        formData.append('image', file);
-
-        fetch( process.env.REACT_APP_API_URL+ '/upload', {
+        formData.append('image', file); 
+        fetch( process.env.REACT_APP_API_URL + '/upload', {
             method: 'POST',
             body: formData,
         })
