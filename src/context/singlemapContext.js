@@ -7,8 +7,8 @@ export const DrawingContextProvider = ({ children }) => {
  
     const OriginalWidth = 1280;
     const OriginalHeight = 720;
-    const [width, setwidth ] =useState( window.innerWidth / 1.5);
-    const [height, setheight ] = useState((width * OriginalHeight) / OriginalWidth);
+    const [width, setwidth ] =useState( OriginalWidth);
+    const [height, setheight ] = useState(OriginalHeight);
  
  
     const [startX, setStartX] = useState(0);
@@ -43,8 +43,7 @@ export const DrawingContextProvider = ({ children }) => {
          setLoading(false)
         setImageurl(map.url)
         setvortexes(map.vortexes)
-        console.log(map.edges);
-        setedges(map.edges)
+           setedges(map.edges)
         setmap(map)
         setSelectedVortex([])
         setLoading(true)
